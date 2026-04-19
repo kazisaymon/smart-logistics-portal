@@ -2,163 +2,147 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import google.generativeai as genai
+from io import BytesIO
 
 # --- PAGE CONFIGURATION ---
-st.set_page_config(
-    page_title=" Smart Logistics Portal",
-    page_icon="🌐",
-    layout="wide"
-)
+st.set_page_config(page_title="NexusTrade AI | Intelligent Supply Chain", layout="wide", page_icon="📈")
 
-# --- CUSTOM CSS FOR PROFESSIONAL UI ---
-# --- CUSTOM CSS FOR PROFESSIONAL UI ---
+# --- CUSTOM CSS FOR MODERN & VIBRANT UI ---
 st.markdown("""
     <style>
-    .main { background-color: #f8f9fa; }
-    .stButton>button { width: 100%; border-radius: 8px; height: 3em; font-weight: bold; background-color: #004b93; color: white; }
-    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .stApp {
+        background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    }
+    div.stButton > button:first-child {
+        background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+        color: white; border: none; border-radius: 12px; height: 3em; font-weight: bold; transition: 0.3s;
+    }
+    div.stButton > button:hover {
+        transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .stMetric {
+        background: rgba(255, 255, 255, 0.8); padding: 20px; border-radius: 15px; border: 1px solid #ffffff;
+    }
+    .sidebar .sidebar-content { background-image: linear-gradient(#2e3192, #1bffff); color: white; }
     </style>
-    """, unsafe_allow_html=True)  # এখানে unsafe_allow_html=True হবে
+    """, unsafe_allow_html=True)
 
 # --- GEMINI AI SETUP ---
-# Your provided API Key integrated
 API_KEY = "AIzaSyAnKtF3VIydi5rpQ621TsFKYhq8f756oQA" 
 
-def get_ai_response(context, question):
+def get_ai_response(context, question, lang):
     try:
         genai.configure(api_key=API_KEY)
         model = genai.GenerativeModel('gemini-pro')
-        # Instructing the AI to act as a Logistics Expert
-        prompt = f"""
-        You are a Supply Chain Expert for EximpCore Trading. 
-        Context Data (Shipments): {context}
-        User Question: {question}
-        
-        Provide a concise, professional answer based on the data.
-        """
+        instruction = "Answer in English." if lang == "English" else "বাংলায় উত্তর দিন।"
+        prompt = f"{instruction}\nSystem Role: Logistics Expert\nContext: {context}\nQuestion: {question}"
         response = model.generate_content(prompt)
         return response.text
-    except Exception as e:
-        return f"AI is currently offline or API quota reached. (Error: {str(e)})"
+    except:
+        return "AI analysis offline." if lang == "English" else "AI বিশ্লেষণ অফলাইন।"
 
-# --- AUTHENTICATION LOGIC ---
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-    st.session_state.role = None
+# --- SESSION STATE ---
+if "logged_in" not in st.session_state: st.session_state.logged_in = False
+if "lang" not in st.session_state: st.session_state.lang = "English"
 
-def login(role):
-    st.session_state.logged_in = True
-    st.session_state.role = role
+# --- MULTILINGUAL DICTIONARY ---
+t = {
+    "English": {
+        "p_name": "NexusTrade AI",
+        "tagline": "Intelligent Supply Chain Engine",
+        "login": "Secure Portal Access",
+        "metrics": ["Total Volume", "Active Ships", "Risk Level", "Conversion"],
+        "ai_auditor": "AI Logistics Consultant",
+        "reports": "Download CSV Report",
+        "currency": "Live Converter (USD to PLN)"
+    },
+    "বাংলা": {
+        "p_name": "নেক্সাসট্রেড এআই",
+        "tagline": "ইন্টেলিজেন্ট সাপ্লাই চেইন ইঞ্জিন",
+        "login": "নিরাপদ পোর্টাল অ্যাক্সেস",
+        "metrics": ["মোট ভলিউম", "সক্রিয় শিপমেন্ট", "ঝুঁকির মাত্রা", "কনভার্সন"],
+        "ai_auditor": "এআই লজিস্টিক কনসালট্যান্ট",
+        "reports": "CSV রিপোর্ট ডাউনলোড",
+        "currency": "লাইভ কনভার্টার (USD থেকে PLN)"
+    }
+}
 
-def logout():
-    st.session_state.logged_in = False
-    st.session_state.role = None
-    st.rerun()
-
-# --- MOCK DATASET (Export-Import Focused) ---
-@st.cache_data
-def load_data():
-    return pd.DataFrame({
-        'Shipment_ID': ['EXP-101', 'IMP-202', 'EXP-103', 'IMP-204', 'EXP-105', 'IMP-206'],
-        'Product': ['Steel Coil', 'Textiles', 'Electronics', 'Chemicals', 'Machinery', 'Garments'],
-        'Destination': ['Poland', 'Bangladesh', 'Germany', 'USA', 'China', 'Vietnam'],
-        'Value_USD': [25000, 12000, 45000, 32000, 85000, 15000],
-        'Status': ['In Transit', 'Delivered', 'Delayed', 'Pending', 'In Transit', 'Delivered'],
-        'Risk_Level': ['Low', 'Low', 'High', 'Medium', 'Low', 'Low'],
-        'Notes': ['On schedule', 'Cleared customs', 'Port Strike in Hamburg', 'Document verification', 'Vessel delayed', 'None']
-    })
-
-df = load_data()
-
-# --- INTERFACE LOGIC ---
-if not st.session_state.logged_in:
-    st.title("🏢  Intelligent Logistics Portal")
-    st.markdown("### Secure Gateway for Global Trade Operations")
-    st.divider()
+# --- SIDEBAR SETTINGS ---
+with st.sidebar:
+    st.title("🌐 Dashboard Settings")
+    st.session_state.lang = st.selectbox("Language / ভাষা", ["English", "বাংলা"])
+    sel = t[st.session_state.lang]
     
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info("#### 🛠️ Administrator\nFull system access, Anomaly Detection, and AI Auditing.")
-        if st.button("Login as Admin"): login("Admin")
-            
-    with col2:
-        st.success("#### 📋  / User\nShipment tracking, documentation, and operational manuals.")
-        if st.button("Login as User"): login("User")
+    st.divider()
+    st.subheader(f"💱 {sel['currency']}")
+    usd_amount = st.number_input("Amount (USD)", value=100.0)
+    pln_rate = 4.02 # Current sample rate for Poland
+    st.write(f"**{usd_amount} USD = {round(usd_amount * pln_rate, 2)} PLN**")
+
+# --- LOGIN ---
+if not st.session_state.logged_in:
+    st.title(f"🚀 {sel['p_name']}")
+    st.write(sel['tagline'])
+    
+    with st.container():
+        st.subheader(sel['login'])
+        user = st.text_input("Username")
+        pwd = st.text_input("Password", type="password")
+        if st.button("Sign In"):
+            if user == "admin" and pwd == "eximp123":
+                st.session_state.logged_in, st.session_state.role = True, "Admin"
+                st.rerun()
+            elif user == "user" and pwd == "user123":
+                st.session_state.logged_in, st.session_state.role = True, "User"
+                st.rerun()
+            else: st.error("Access Denied!")
     st.stop()
 
-# --- SIDEBAR ---
-with st.sidebar:
-    st.header("EximpCore System")
-    st.write(f"**Access Level:** `{st.session_state.role}`")
-    st.divider()
-    if st.button("🚪 Log Out"): logout()
+# --- LOAD DATA ---
+df = pd.read_csv('data_samples.csv')
 
-# --- ADMIN PANEL ---
+# --- DASHBOARD CONTENT ---
+st.title(f"📊 {sel['p_name']}")
+st.write(f"Welcome back, **{st.session_state.role}** | Language: **{st.session_state.lang}**")
+
 if st.session_state.role == "Admin":
-    st.title("🛠️ Executive Command Center")
-    
-    # 1. SMART NOTIFICATIONS (Anomaly Detection)
-    st.subheader("⚠️ System Intelligence Alerts")
-    a_col1, a_col2 = st.columns(2)
-    
-    with a_col1:
-        delayed = df[df['Status'] == 'Delayed']
-        if not delayed.empty:
-            for _, row in delayed.iterrows():
-                st.error(f"**CRITICAL DELAY:** {row['Shipment_ID']} to {row['Destination']} is stuck due to '{row['Notes']}'.")
-    
-    with a_col2:
-        # Simple Anomaly: Value > 50k
-        high_value = df[df['Value_USD'] > 50000]
-        if not high_value.empty:
-            for _, row in high_value.iterrows():
-                st.warning(f"**HIGH VALUE ALERT:** {row['Shipment_ID']} exceeds standard insurance limit (${row['Value_USD']:,}).")
+    # Metrics
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric(sel['metrics'][0], f"${df['Value_USD'].sum():,}")
+    m2.metric(sel['metrics'][1], len(df[df['Status'] != 'Delivered']))
+    m3.metric(sel['metrics'][2], "High" if len(df[df['Status'] == 'Delayed']) > 0 else "Low")
+    m4.metric(sel['metrics'][3], f"{pln_rate} PLN/USD")
 
-    st.divider()
-
-    # 2. ADMIN TABS
-    tab1, tab2, tab3 = st.tabs(["📊 Global Analytics", "🗄️ Master Database", "🤖 AI Logistics Consultant"])
+    tab1, tab2, tab3 = st.tabs(["📈 Analytics", "🗄️ Master Database", "🤖 " + sel['ai_auditor']])
     
     with tab1:
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Total Trade Volume", f"${df['Value_USD'].sum():,}")
-        c2.metric("Active Shipments", len(df[df['Status'] != 'Delivered']))
-        c3.metric("Critical Risks", len(df[df['Status'] == 'Delayed']))
-        c4.metric("Avg. Shipment", f"${int(df['Value_USD'].mean()):,}")
+        c1, c2 = st.columns(2)
+        with c1:
+            fig1 = px.pie(df, values='Value_USD', names='Status', hole=.4, title="Shipment Status Distribution")
+            st.plotly_chart(fig1, use_container_width=True)
+        with c2:
+            fig2 = px.bar(df, x='Destination', y='Value_USD', color='Risk_Level', title="Market Value by Country")
+            st.plotly_chart(fig2, use_container_width=True)
         
-        fig = px.bar(df, x='Destination', y='Value_USD', color='Status', barmode='group', 
-                     title="Revenue Distribution by Destination", template="plotly_white")
-        st.plotly_chart(fig, use_container_width=True)
-        
-    with tab2:
-        st.subheader("Edit Shipment Records")
-        st.data_editor(df, num_rows="dynamic", use_container_width=True)
-        if st.button("💾 Synchronize with Cloud"):
-            st.success("Database synchronized successfully!")
-            
-    with tab3:
-        st.subheader("AI Powered Expert (RAG)")
-        st.write("Ask our AI about current shipment risks or performance:")
-        u_input = st.text_input("Example: 'Which shipments are delayed and why?'")
-        if u_input:
-            with st.spinner("Analyzing shipments via Gemini AI..."):
-                context_str = df.to_string()
-                response = get_ai_response(context_str, u_input)
-                st.markdown(f"**AI Response:**\n\n{response}")
+        # Download Feature
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(label=f"📥 {sel['reports']}", data=csv, file_name='NexusTrade_Report.csv', mime='text/csv')
 
-# --- USER PANEL ---
-else:
-    st.title("📋 Operational Monitoring Portal")
-    t1, t2 = st.tabs(["📦 Shipment Tracking", "📖 SOP Knowledge Base"])
-    
-    with t1:
-        st.subheader("Current Shipment Logs")
-        st.dataframe(df, use_container_width=True)
-        st.info("System Note: Your access level is restricted to Read-Only.")
+    with tab2:
+        st.data_editor(df, num_rows="dynamic", use_container_width=True)
         
-    with t2:
-        st.subheader("EximpCore SOP & Manuals")
-        with st.expander("Required Export Documents"):
-            st.write("1. Bill of Lading\n2. Commercial Invoice\n3. Packing List\n4. Export License")
-        with st.expander("Standard Risk Assessment"):
-            st.write("Always check the 'Notes' column in the tracking sheet for real-time port updates.")
+    with tab3:
+        u_q = st.text_input("Query AI about Logistics Risks:")
+        if u_q:
+            with st.spinner("Analyzing..."):
+                st.markdown(get_ai_response(df.to_string(), u_q, st.session_state.lang))
+
+else:
+    # User View
+    st.subheader("📦 Real-time Shipment Tracking")
+    st.dataframe(df, use_container_width=True)
+    st.info("Language synced. Restricted Access: Editing & AI Auditor disabled for Interns.")
+
+if st.sidebar.button("Log Out"):
+    st.session_state.logged_in = False
+    st.rerun()
