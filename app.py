@@ -11,13 +11,14 @@ st.set_page_config(
 )
 
 # --- CUSTOM CSS FOR PROFESSIONAL UI ---
+# --- CUSTOM CSS FOR PROFESSIONAL UI ---
 st.markdown("""
     <style>
     .main { background-color: #f8f9fa; }
     .stButton>button { width: 100%; border-radius: 8px; height: 3em; font-weight: bold; background-color: #004b93; color: white; }
     .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     </style>
-    """, unsafe_allow_value=True)
+    """, unsafe_allow_html=True)  # এখানে unsafe_allow_html=True হবে
 
 # --- GEMINI AI SETUP ---
 # Your provided API Key integrated
