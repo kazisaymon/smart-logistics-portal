@@ -1,0 +1,9 @@
+Shipment_ID,Product,Destination,Value_USD,Status,Risk_Level,Notes
+EXP-101,Steel Coil,Poland,25000,In Transit,Low,On schedule
+IMP-202,Textiles,Bangladesh,12000,Delivered,Low,Cleared customs
+EXP-103,Electronics,Germany,45000,Delayed,High,Port Strike in Hamburg
+IMP-204,Chemicals,USA,32000,Pending,Medium,Document verification
+EXP-105,Machinery,China,85000,In Transit,Low,Vessel delayed
+IMP-206,Garments,Vietnam,15000,Delivered,Low,None
+EXP-107,Solar Panels,Poland,62000,In Transit,Low,Priority delivery
+IMP-208,Raw Cotton,Bangladesh,28000,Delayed,Medium,Shipment congestion
