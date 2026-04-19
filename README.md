@@ -52,4 +52,4 @@ This project demonstrates the practical application of **Computer Science** in t
 
 ---
 **Developed by:** [Mouno Uddin]  
-**Position:** Candidate for Supply Chain Intern @ EximpCore Trading
+
